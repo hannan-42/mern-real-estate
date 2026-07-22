@@ -1,5 +1,5 @@
 import User from "../models/user.js";
-
+import { errorHandler } from "../utils/error.js";
 
 export const signup = async (req, res, next) => {
   const { username, email, password } = req.body;
@@ -9,7 +9,7 @@ export const signup = async (req, res, next) => {
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
+      return next(errorHandler(400, "User already exists"));
     }
     const newUser = new User({ username, email, password });
     await newUser.save();
