@@ -12,12 +12,14 @@ export default function SignIn() {
   const { loading, error } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.id]: e.target.value,
     });
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -30,6 +32,10 @@ export default function SignIn() {
         body: JSON.stringify(formData),
       });
       const data = await res.json();
+      if (!res.ok) {
+        dispatch(signInFailure(data.message || "Network error"));
+        return;
+      }
       if (data.success === false) {
         dispatch(signInFailure(data.message));
         return;
@@ -37,10 +43,10 @@ export default function SignIn() {
       dispatch(signInSuccess(data));
       navigate("/");
     } catch (error) {
-      dispatch(signInFailure(data.message));
+      dispatch(signInFailure(error.message));
     }
   };
-  console.log(formData);
+
   return (
     <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl shadow-2xl p-8">
@@ -85,6 +91,10 @@ export default function SignIn() {
           </button>
         </form>
 
+        {error && (
+          <p className="text-red-500 text-sm text-center mt-4">{error}</p>
+        )}
+
         <div className="mt-6 border-t border-slate-200 pt-5 text-center text-sm text-slate-600">
           <span>Don’t have an account?</span>
           <Link
@@ -95,7 +105,6 @@ export default function SignIn() {
           </Link>
         </div>
       </div>
-      {error && <p className="text-red-500 mt-5">{error}</p>}
     </div>
   );
 }
