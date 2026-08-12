@@ -36,13 +36,21 @@ export default function Header() {
             {currentUser ? (
               <img
                 className="rounded-full h-7 w-7 object-cover"
-                src={currentUser.avatar}
+                src={
+                  currentUser.avatar ||
+                  "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
+                }
                 alt="profile"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  e.target.src =
+                    "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
+                }}
               />
             ) : (
-              <span className="hidden sm:inline text-slate-700 hover:underline">
+              <li className="sm:inline text-slate-700 hover:underline">
                 Sign in
-              </span>
+              </li>
             )}
           </Link>
         </ul>

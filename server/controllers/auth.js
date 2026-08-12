@@ -77,7 +77,7 @@ export const google = async (req, res, next) => {
     const existingUser = await User.findOne({ email: req.body.email });
 
     if (existingUser) {
-      if (!existingUser.avatar && req.body.photo) {
+      if (req.body.photo && existingUser.avatar !== req.body.photo) {
         existingUser.avatar = req.body.photo;
         await existingUser.save();
       }
