@@ -1,13 +1,46 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 
 export default function Profile() {
   const fileRef = useRef(null);
   const { currentUser } = useSelector((state) => state.user);
   const dispatch = useDispatch();
-
   const [formData, setFormData] = useState({});
   const [file, setFile] = useState(undefined);
+  const [imageUploading, setImageUploading] = useState(false);
+
+  const handleFileUpload = async (file) => {
+  try {
+    setImageUploading(true);
+    const data = new FormData();
+    data.append("avatar", file);
+
+    const res = await fetch("/server/auth/upload-avatar", {
+      method: "POST",
+      body: data,
+    });
+    if (!res.ok) {
+      throw new Error(`Server returned status ${res.status}`);
+    }
+
+    const result = await res.json();
+    setImageUploading(false);
+
+    if (result.success) {
+      console.log("Uploaded Image URL:", result.url);
+      setFormData((prev) => ({ ...prev, avatar: result.url }));
+    }
+  } catch (error) {
+    setImageUploading(false);
+    console.error("Upload failed:", error.message);
+  }
+};
+
+  useEffect(() => {
+    if (file) {
+      handleFileUpload(file);
+    }
+  }, [file]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -15,11 +48,13 @@ export default function Profile() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log("Form Submitted:", formData);
     // Dispatch update profile API logic here
   };
 
   return (
     <div className="p-3 max-w-lg mx-auto my-10">
+      {/* Single Controlled Hidden File Input */}
       <input
         type="file"
         ref={fileRef}
@@ -39,10 +74,12 @@ export default function Profile() {
           </p>
         </div>
 
-        <div className="self-center relative group">
+        {/* Profile Image with Dynamic State & Loading Indicator */}
+        <div className="self-center flex flex-col items-center gap-2">
           <img
             onClick={() => fileRef.current.click()}
             src={
+              formData.avatar ||
               currentUser?.avatar ||
               "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
             }
@@ -53,8 +90,13 @@ export default function Profile() {
               e.target.src =
                 "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
             }}
-            className="rounded-full h-24 w-24 object-cover cursor-pointer border-2 border-gray-200 shadow-sm group-hover:opacity-80 transition-all"
+            className="rounded-full h-24 w-24 object-cover cursor-pointer border-2 border-gray-200 shadow-sm hover:opacity-80 transition-all"
           />
+          {imageUploading && (
+            <p className="text-xs text-blue-600 font-medium animate-pulse">
+              Uploading image...
+            </p>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
